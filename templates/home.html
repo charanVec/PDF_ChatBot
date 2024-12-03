@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - PDF Chat Application</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body background="static\pdfchat.jpg">
+    <div class="container" style="background-color: rgb(8, 42, 77);">
+        <h1>Welcome to the PDF Chat Application</h1>
+        <p style="color: aliceblue;">Select an action below:</p>
+        <div class="navigation">
+            <a href="{{ url_for('upload_page') }}" class="button">Upload PDF Files</a>
+            <a href="{{ url_for('query_page') }}" class="button">Query and Chat</a>
+        </div>
+    </div>
+</body>
+</html>

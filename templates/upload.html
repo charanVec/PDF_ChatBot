@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload PDF Files</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body background="static\pdfchat.jpg"></body>
+    <div class="container" style="background-color: rgb(8, 42, 77);">
+        <h1>Upload PDF Files</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="files" name="files" multiple style="color: aliceblue;">
+            <button type="submit">Upload</button>
+        </form>
+        <h2 style="color: aliceblue">Uploaded Files</h2>
+        <ul id="fileList"></ul>
+        <a href="{{ url_for('query_page') }}" class="button">Query and Chat</a>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const files = document.getElementById('files').files;
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            fetch('/upload_files', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.file_names) {
+                    data.file_names.forEach(file_name => {
+                        const li = document.createElement('li');
+                        li.textContent = file_name;
+                        li.setAttribute('data-filename', file_name);
+                        li.innerHTML += ` <button onclick="cancelFile('${file_name}')">Cancel</button>`;
+                        document.getElementById('fileList').appendChild(li);
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function cancelFile(file_name) {
+            fetch(`/cancel/${file_name}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    const fileListItem = document.querySelector(`li[data-filename='${file_name}']`);
+                    fileListItem.remove();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

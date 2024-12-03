@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query and Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .feedback-buttons {
+            margin-top: 20px;
+        }
+        .feedback-buttons img {
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body background="static/pdfchat.jpg">
+    <div class="container" style="background-color: rgb(8, 42, 77);">
+        <h1>Query and Chat</h1>
+        <form id="queryForm">
+            <textarea id="question" name="question" placeholder="Type your question here..." style="width: 1000px;"></textarea>
+            <button type="submit">Ask</button>
+        </form>
+        <h3 style="color: aliceblue;">Response</h3>
+        <div id="response"></div>
+        <div class="feedback-buttons">
+            <img id="copy" src="{{ url_for('static', filename='copy img.png') }}" alt="Copy" title="Copy"/>
+        </div>
+        <h3 style="color: aliceblue;">Chat History</h3>
+        <div id="chatHistory">
+            {% for chat in chat_history|reverse %}
+                <div class="chat-entry">
+                    <p><strong>Q:</strong> {{ chat.question }}</p>
+                    <p><strong>A:</strong> {{ chat.response }}</p>
+                </div>
+            {% endfor %}
+        </div>
+        <button id="clearHistoryButton" class="clear-button">Clear Chat History</button>
+        <a href="{{ url_for('home') }}" class="button">Back to Home</a>
+    </div>
+
+    <script>
+        // Handle form submission for asking a question
+        document.getElementById('queryForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const question = document.getElementById('question').value;
+
+            fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    const responseDiv = document.getElementById('response');
+                    responseDiv.innerHTML = data.response;
+
+                    // Append to chat history
+                    const chatHistoryDiv = document.getElementById('chatHistory');
+                    const newChatEntry = document.createElement('div');
+                    newChatEntry.classList.add('chat-entry');
+                    newChatEntry.innerHTML = `<p><strong>Q:</strong> ${question}</p><p><strong>A:</strong> ${data.response}</p>`;
+                    chatHistoryDiv.insertBefore(newChatEntry, chatHistoryDiv.firstChild);
+
+                    // Optionally, clear the input field after submitting
+                    document.getElementById('question').value = '';
+                } else if (data.error) {
+                    document.getElementById('response').textContent = `Error: ${data.error}`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Handle clearing the chat history
+        document.getElementById('clearHistoryButton').addEventListener('click', function () {
+            fetch('/clear_history', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // Clear the chat history from the UI
+                    const chatHistoryDiv = document.getElementById('chatHistory');
+                    chatHistoryDiv.innerHTML = '';
+                    document.getElementById('response').textContent = '';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('copy').addEventListener('click', function () {
+            // Handle copy feedback
+            const responseText = document.getElementById('response').textContent;
+            navigator.clipboard.writeText(responseText).then(() => {
+                alert('Response copied to clipboard');
+            });
+        });
+    </script>
+</body>
+</html>
